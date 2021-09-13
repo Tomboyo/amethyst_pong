@@ -19,45 +19,9 @@ impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let sprite_sheet_handle = load_sprite_sheet(data.world);
         initialize_camera(data.world);
-        initialize_paddles(data.world, sprite_sheet_handle);
+        initialize_paddles(data.world, sprite_sheet_handle.clone());
+        initialize_ball(data.world, sprite_sheet_handle);
     }
-}
-
-fn initialize_camera(world: &mut World) {
-    world
-        .create_entity()
-        .with(Camera::standard_2d(ARENA_WIDTH, ARENA_HEIGHT))
-        .with(
-            Transform::default()
-                .set_translation_xyz(ARENA_WIDTH * 0.5, ARENA_HEIGHT * 0.5, 1.0)
-                .to_owned(),
-        )
-        .build();
-}
-
-fn initialize_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
-    let sprite_renderer = SpriteRender::new(sprite_sheet_handle, 0);
-    world
-        .create_entity()
-        .with(Paddle::new(Side::Left))
-        .with(
-            Transform::default()
-                .set_translation_xyz(PADDLE_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0)
-                .to_owned(),
-        )
-        .with(sprite_renderer.clone())
-        .build();
-
-    world
-        .create_entity()
-        .with(Paddle::new(Side::Right))
-        .with(
-            Transform::default()
-                .set_translation_xyz(ARENA_WIDTH - (PADDLE_WIDTH / 2.0), ARENA_HEIGHT / 2.0, 0.0)
-                .to_owned(),
-        )
-        .with(sprite_renderer)
-        .build();
 }
 
 fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
@@ -79,6 +43,58 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
         (),
         &sprite_sheet_store,
     )
+}
+
+fn initialize_camera(world: &mut World) {
+    world
+        .create_entity()
+        .with(Camera::standard_2d(ARENA_WIDTH, ARENA_HEIGHT))
+        .with(
+            Transform::default()
+                .set_translation_xyz(ARENA_WIDTH * 0.5, ARENA_HEIGHT * 0.5, 1.0)
+                .to_owned(),
+        )
+        .build();
+}
+
+fn initialize_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
+    let sprite_render = SpriteRender::new(sprite_sheet_handle, 0);
+    world
+        .create_entity()
+        .with(Paddle::new(Side::Left))
+        .with(
+            Transform::default()
+                .set_translation_xyz(PADDLE_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0)
+                .to_owned(),
+        )
+        .with(sprite_render.clone())
+        .build();
+
+    world
+        .create_entity()
+        .with(Paddle::new(Side::Right))
+        .with(
+            Transform::default()
+                .set_translation_xyz(ARENA_WIDTH - (PADDLE_WIDTH / 2.0), ARENA_HEIGHT / 2.0, 0.0)
+                .to_owned(),
+        )
+        .with(sprite_render)
+        .build();
+}
+
+fn initialize_ball(world: &mut World, sprite_sheet: Handle<SpriteSheet>) {
+    world
+        .create_entity()
+        .with(Ball {
+            velocity: [75.0, 50.0],
+        })
+        .with(
+            Transform::default()
+                .set_translation_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0)
+                .to_owned(),
+        )
+        .with(SpriteRender::new(sprite_sheet, 1))
+        .build();
 }
 
 #[derive(PartialEq, Eq)]
@@ -104,5 +120,13 @@ impl Paddle {
 }
 
 impl Component for Paddle {
+    type Storage = DenseVecStorage<Self>;
+}
+
+pub struct Ball {
+    pub velocity: [f32; 2],
+}
+
+impl Component for Ball {
     type Storage = DenseVecStorage<Self>;
 }
