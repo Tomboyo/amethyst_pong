@@ -86,7 +86,8 @@ fn initialize_ball(world: &mut World, sprite_sheet: Handle<SpriteSheet>) {
     world
         .create_entity()
         .with(Ball {
-            velocity: [75.0, 50.0],
+            radius: 2.0,
+            velocity: [10.0, 15.0],
         })
         .with(
             Transform::default()
@@ -124,6 +125,7 @@ impl Component for Paddle {
 }
 
 pub struct Ball {
+    pub radius: f32,
     pub velocity: [f32; 2],
 }
 

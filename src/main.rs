@@ -10,7 +10,7 @@ use amethyst::{
 };
 
 use pong::Pong;
-use systems::{MoveBallsSystem, PaddleSystem};
+use systems::{BounceBallsSystem, MoveBallsSystem, PaddleSystem};
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
@@ -34,7 +34,12 @@ fn main() -> amethyst::Result<()> {
         // TODO: StirngBindings is discouraged
         .with_bundle(InputBundle::<StringBindings>::new().with_bindings_from_file(binding_path)?)?
         .with(PaddleSystem, "paddle_system", &["input_system"])
-        .with(MoveBallsSystem, "move_balls_system", &[]);
+        .with(MoveBallsSystem, "move_balls_system", &[])
+        .with(
+            BounceBallsSystem,
+            "bounce_balls_system",
+            &["paddle_system", "move_balls_system"],
+        );
 
     let mut game = Application::new(assets_dir, Pong, game_data)?;
 
