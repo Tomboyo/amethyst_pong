@@ -1,11 +1,11 @@
 use amethyst::{
     assets::{AssetStorage, Handle, Loader},
-    core::Transform,
+    core::{Time, Transform},
     ecs::{Component, DenseVecStorage},
     prelude::{Builder, WorldExt},
     renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
     shred::World,
-    GameData, SimpleState, StateData,
+    GameData, SimpleState, SimpleTrans, StateData, Trans,
 };
 
 pub const ARENA_HEIGHT: f32 = 100.0;
@@ -14,13 +14,38 @@ pub const ARENA_WIDTH: f32 = 100.0;
 pub const PADDLE_HEIGHT: f32 = 16.0;
 pub const PADDLE_WIDTH: f32 = 4.0;
 
-pub struct Pong;
+#[derive(Default)]
+pub struct Pong {
+    ball_spawn_countdown: Option<f32>,
+    // TODO: Lazy<T> type for this?
+    sprite_sheet_handle: Option<Handle<SpriteSheet>>,
+}
+
 impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        let sprite_sheet_handle = load_sprite_sheet(data.world);
+        self.ball_spawn_countdown.replace(3.0);
+        self.sprite_sheet_handle
+            .replace(load_sprite_sheet(data.world));
+
         initialize_camera(data.world);
-        initialize_paddles(data.world, sprite_sheet_handle.clone());
-        initialize_ball(data.world, sprite_sheet_handle);
+        initialize_paddles(data.world, self.sprite_sheet_handle.clone().unwrap());
+    }
+
+    fn fixed_update(&mut self, data: StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+        // Spawn the ball after the countdown expires.
+        if let Some(mut t) = self.ball_spawn_countdown.take() {
+            {
+                let time = data.world.fetch::<Time>();
+                t -= time.delta_seconds();
+            }
+            if t <= 0.0 {
+                initialize_ball(data.world, self.sprite_sheet_handle.clone().unwrap());
+            } else {
+                self.ball_spawn_countdown.replace(t);
+            }
+        }
+
+        Trans::None
     }
 }
 
