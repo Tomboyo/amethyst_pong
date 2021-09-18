@@ -5,7 +5,7 @@ use amethyst::{
     prelude::{Builder, WorldExt},
     renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
     shred::World,
-    GameData, SimpleState, SimpleTrans, StateData, Trans,
+    GameData, SimpleState, StateData,
 };
 
 pub const ARENA_HEIGHT: f32 = 100.0;
@@ -15,37 +15,16 @@ pub const PADDLE_HEIGHT: f32 = 16.0;
 pub const PADDLE_WIDTH: f32 = 4.0;
 
 #[derive(Default)]
-pub struct Pong {
-    ball_spawn_countdown: Option<f32>,
-    // TODO: Lazy<T> type for this?
-    sprite_sheet_handle: Option<Handle<SpriteSheet>>,
-}
+pub struct Pong;
 
 impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        self.ball_spawn_countdown.replace(3.0);
-        self.sprite_sheet_handle
-            .replace(load_sprite_sheet(data.world));
+        let sprite_sheet = load_sprite_sheet(data.world);
+        data.world.insert(Some(sprite_sheet.clone()));
 
         initialize_camera(data.world);
-        initialize_paddles(data.world, self.sprite_sheet_handle.clone().unwrap());
-    }
-
-    fn fixed_update(&mut self, data: StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
-        // Spawn the ball after the countdown expires.
-        if let Some(mut t) = self.ball_spawn_countdown.take() {
-            {
-                let time = data.world.fetch::<Time>();
-                t -= time.delta_seconds();
-            }
-            if t <= 0.0 {
-                initialize_ball(data.world, self.sprite_sheet_handle.clone().unwrap());
-            } else {
-                self.ball_spawn_countdown.replace(t);
-            }
-        }
-
-        Trans::None
+        initialize_paddles(data.world, sprite_sheet);
+        initialize_ball_spawn_timeout(data.world);
     }
 }
 
@@ -107,19 +86,18 @@ fn initialize_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet
         .build();
 }
 
-fn initialize_ball(world: &mut World, sprite_sheet: Handle<SpriteSheet>) {
+fn initialize_ball_spawn_timeout(world: &mut World) {
+    let expiry = {
+        let time = world.fetch::<Time>();
+        time.absolute_time_seconds() + 3.0
+    };
+
     world
         .create_entity()
-        .with(Ball {
-            radius: 2.0,
+        .with(BallSpawnTimeout {
+            expiry,
             velocity: [10.0, 15.0],
         })
-        .with(
-            Transform::default()
-                .set_translation_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0)
-                .to_owned(),
-        )
-        .with(SpriteRender::new(sprite_sheet, 1))
         .build();
 }
 
@@ -155,5 +133,14 @@ pub struct Ball {
 }
 
 impl Component for Ball {
+    type Storage = DenseVecStorage<Self>;
+}
+
+pub struct BallSpawnTimeout {
+    pub expiry: f64,
+    pub velocity: [f32; 2],
+}
+
+impl Component for BallSpawnTimeout {
     type Storage = DenseVecStorage<Self>;
 }
