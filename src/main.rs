@@ -10,7 +10,9 @@ use amethyst::{
 };
 
 use pong::Pong;
-use systems::{BallSpawnTimeoutSystem, BounceBallsSystem, MoveBallsSystem, PaddleSystem};
+use systems::{
+    BallSpawnTimeoutSystem, BounceBallsSystem, MoveBallsSystem, PaddleSystem, WinnerSystem,
+};
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
@@ -40,7 +42,8 @@ fn main() -> amethyst::Result<()> {
             "bounce_balls_system",
             &["paddle_system", "move_balls_system"],
         )
-        .with(BallSpawnTimeoutSystem, "ball_spawn_timeout_system", &[]);
+        .with(BallSpawnTimeoutSystem, "ball_spawn_timeout_system", &[])
+        .with(WinnerSystem, "winner_system", &["move_balls_system"]);
 
     let mut game = Application::new(assets_dir, Pong::default(), game_data)?;
 
