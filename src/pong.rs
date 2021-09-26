@@ -20,7 +20,7 @@ pub struct Pong;
 impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let sprite_sheet = load_sprite_sheet(data.world);
-        data.world.insert(Some(sprite_sheet.clone()));
+        data.world.insert(sprite_sheet.clone());
 
         initialize_camera(data.world);
         initialize_paddles(data.world, sprite_sheet);

@@ -1,7 +1,9 @@
 use amethyst::assets::Handle;
 use amethyst::core::{Time, Transform};
 use amethyst::derive::SystemDesc;
-use amethyst::ecs::{Entities, Join, LazyUpdate, Read, ReadStorage, System, SystemData};
+use amethyst::ecs::{
+    Entities, Join, LazyUpdate, Read, ReadExpect, ReadStorage, System, SystemData,
+};
 use amethyst::prelude::Builder;
 use amethyst::renderer::{SpriteRender, SpriteSheet};
 use amethyst::shred::{ResourceId, World};
@@ -13,7 +15,7 @@ pub struct BallSpawnTimeoutSystem;
 
 #[derive(SystemData)]
 pub struct Data<'s> {
-    sprite_sheet: Read<'s, Option<Handle<SpriteSheet>>>,
+    sprite_sheet: ReadExpect<'s, Handle<SpriteSheet>>,
     time: Read<'s, Time>,
     entities: Entities<'s>,
     lazy_update: Read<'s, LazyUpdate>,
@@ -28,7 +30,7 @@ impl<'s> System<'s> for BallSpawnTimeoutSystem {
             if timeout.expiry < data.time.absolute_time_seconds() {
                 data.entities.delete(entity).unwrap();
 
-                let sprite_sheet = data.sprite_sheet.clone().unwrap();
+                let sprite_sheet = data.sprite_sheet.clone();
                 data.lazy_update
                     .create_entity(&data.entities)
                     .with(Ball {
