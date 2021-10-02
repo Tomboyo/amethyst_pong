@@ -5,6 +5,7 @@ use amethyst::{
     core::TransformBundle,
     input::{InputBundle, StringBindings},
     renderer::{types::DefaultBackend, RenderFlat2D, RenderToWindow, RenderingBundle},
+    ui::{RenderUi, UiBundle},
     utils::application_root_dir,
     Application, GameDataBuilder,
 };
@@ -30,11 +31,13 @@ fn main() -> amethyst::Result<()> {
                     RenderToWindow::from_config_path(display_config_path)?
                         .with_clear([0.0, 0.0, 0.0, 1.0]),
                 )
-                .with_plugin(RenderFlat2D::default()),
+                .with_plugin(RenderFlat2D::default())
+                .with_plugin(RenderUi::default()),
         )?
         .with_bundle(TransformBundle::new())?
         // TODO: StirngBindings is discouraged
         .with_bundle(InputBundle::<StringBindings>::new().with_bindings_from_file(binding_path)?)?
+        .with_bundle(UiBundle::<StringBindings>::new())?
         .with(PaddleSystem, "paddle_system", &["input_system"])
         .with(MoveBallsSystem, "move_balls_system", &[])
         .with(

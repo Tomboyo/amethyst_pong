@@ -1,10 +1,11 @@
 use amethyst::{
     assets::{AssetStorage, Handle, Loader},
     core::{Time, Transform},
-    ecs::{Component, DenseVecStorage},
+    ecs::{Component, DenseVecStorage, Entity},
     prelude::{Builder, WorldExt},
     renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
     shred::World,
+    ui::{Anchor, FontAsset, LineMode, TtfFormat, UiText, UiTransform},
     GameData, SimpleState, StateData,
 };
 
@@ -23,6 +24,7 @@ impl SimpleState for Pong {
         data.world.insert(sprite_sheet.clone());
 
         initialize_camera(data.world);
+        initialize_scoreboard(data.world);
         initialize_paddles(data.world, sprite_sheet);
         initialize_ball_spawn_timeout(data.world);
     }
@@ -59,6 +61,61 @@ fn initialize_camera(world: &mut World) {
                 .to_owned(),
         )
         .build();
+}
+
+fn initialize_scoreboard(world: &mut World) {
+    let font = world.read_resource::<Loader>().load(
+        "font/square.ttf",
+        TtfFormat,
+        (),
+        &world.read_resource::<AssetStorage<FontAsset>>(),
+    );
+
+    let left = world
+        .create_entity()
+        .with(UiTransform::new(
+            "left".to_string(),
+            Anchor::TopMiddle,
+            Anchor::TopMiddle,
+            -50.,
+            -50.,
+            1.,
+            200.,
+            50.,
+        ))
+        .with(UiText::new(
+            font.clone(),
+            "0".to_string(),
+            [1., 1., 1., 1.],
+            50.,
+            LineMode::Single,
+            Anchor::Middle,
+        ))
+        .build();
+
+    let right = world
+        .create_entity()
+        .with(UiTransform::new(
+            "right".to_string(),
+            Anchor::TopMiddle,
+            Anchor::TopMiddle,
+            50.,
+            -50.,
+            1.,
+            200.,
+            50.,
+        ))
+        .with(UiText::new(
+            font,
+            "0".to_string(),
+            [1., 1., 1., 1.],
+            50.,
+            LineMode::Single,
+            Anchor::Middle,
+        ))
+        .build();
+
+    world.insert(ScoreUi { left, right });
 }
 
 fn initialize_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
@@ -143,4 +200,9 @@ pub struct BallSpawnTimeout {
 
 impl Component for BallSpawnTimeout {
     type Storage = DenseVecStorage<Self>;
+}
+
+pub struct ScoreUi {
+    pub left: Entity,
+    pub right: Entity,
 }
