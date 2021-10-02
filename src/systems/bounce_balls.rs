@@ -31,12 +31,11 @@ impl<'s> System<'s> for BounceBallsSystem {
                 let paddle_x = local.translation().x;
                 let paddle_y = local.translation().y;
 
-                if point_in_rect(x, y, paddle_x, paddle_y, paddle.width, paddle.height) {
-                    if (paddle.side == Side::Left && ball.velocity[0] < 0.0)
-                        || (paddle.side == Side::Right && ball.velocity[0] > 0.0)
-                    {
-                        ball.velocity[0] = -ball.velocity[0];
-                    }
+                if point_in_rect(x, y, paddle_x, paddle_y, paddle.width, paddle.height)
+                    && ((paddle.side == Side::Left && ball.velocity[0] < 0.0)
+                        || (paddle.side == Side::Right && ball.velocity[0] > 0.0))
+                {
+                    ball.velocity[0] = -ball.velocity[0];
                 }
             }
         }

@@ -202,6 +202,12 @@ impl Component for BallSpawnTimeout {
     type Storage = DenseVecStorage<Self>;
 }
 
+#[derive(Default)]
+pub struct Scores {
+    pub left: u16,
+    pub right: u16,
+}
+
 pub struct ScoreUi {
     pub left: Entity,
     pub right: Entity,

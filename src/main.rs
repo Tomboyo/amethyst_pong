@@ -1,3 +1,4 @@
+#![allow(clippy::option_map_unit_fn)]
 mod pong;
 mod systems;
 
