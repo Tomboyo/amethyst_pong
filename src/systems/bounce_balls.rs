@@ -50,8 +50,87 @@ fn point_in_rect(
     rect_width: f32,
     rect_height: f32,
 ) -> bool {
-    x < rect_x + rect_width
-        && x > rect_x - rect_width
-        && y < rect_y + rect_height
-        && y > rect_y - rect_height
+    let w = rect_width / 2.;
+    let h = rect_height / 2.;
+
+    x <= rect_x + w && x >= rect_x - w && y <= rect_y + h && y >= rect_y - h
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // This rectangle is used in the following tests.
+    //   a       b
+    //  +-------+
+    //  |   |   |
+    //  |   |c  |
+    //  |---+---|
+    //  |   |   |
+    //  |d  |   |e
+    //  +-------+
+    //
+    // c: (50, 50)
+    // a: (40, 0)
+    // b: (60, 0)
+    // d: (40, 100)
+    // e: (60, 100)
+    fn f(x: f32, y: f32) -> bool {
+        point_in_rect(x, y, 50., 50., 20., 100.)
+    }
+
+    mod point_in_rect {
+        mod when_point_inside {
+            use crate::systems::bounce_balls::tests::f;
+
+            #[test]
+            fn upper_left() {
+                assert!(f(40., 0.));
+            }
+
+            #[test]
+            fn upper_right() {
+                assert!(f(60., 0.));
+            }
+
+            #[test]
+            fn lower_left() {
+                assert!(f(40., 100.));
+            }
+
+            #[test]
+            fn lower_right() {
+                assert!(f(60., 100.));
+            }
+
+            #[test]
+            fn center() {
+                assert!(f(50., 50.));
+            }
+        }
+
+        mod when_point_outside {
+            use crate::systems::bounce_balls::tests::f;
+
+            #[test]
+            fn above() {
+                assert!(!f(50., -0.1));
+            }
+
+            #[test]
+            fn below() {
+                assert!(!f(50., 100.1));
+            }
+
+            #[test]
+            fn right() {
+                assert!(!f(60.1, 50.));
+            }
+
+            #[test]
+            fn left() {
+                assert!(!f(39.9, 50.));
+            }
+        }
+    }
 }
