@@ -4,7 +4,7 @@ mod pong;
 mod systems;
 
 use amethyst::{
-    audio::AudioBundle,
+    audio::{AudioBundle, DjSystemDesc},
     core::TransformBundle,
     input::{InputBundle, StringBindings},
     renderer::{types::DefaultBackend, RenderFlat2D, RenderToWindow, RenderingBundle},
@@ -13,6 +13,7 @@ use amethyst::{
     Application, GameDataBuilder,
 };
 
+use audio::Music;
 use pong::Pong;
 use systems::{
     BallSpawnTimeoutSystem, BounceBallsSystem, MoveBallsSystem, PaddleSystem, WinnerSystem,
@@ -42,6 +43,11 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(InputBundle::<StringBindings>::new().with_bindings_from_file(binding_path)?)?
         .with_bundle(UiBundle::<StringBindings>::new())?
         .with_bundle(AudioBundle::default())?
+        .with_system_desc(
+            DjSystemDesc::new(|music: &mut Music| music.music.next()),
+            "dj_system",
+            &[],
+        )
         .with(PaddleSystem, "paddle_system", &["input_system"])
         .with(MoveBallsSystem, "move_balls_system", &[])
         .with(
