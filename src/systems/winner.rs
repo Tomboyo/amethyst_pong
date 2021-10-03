@@ -1,3 +1,6 @@
+use amethyst::assets::AssetStorage;
+use amethyst::audio::output::Output;
+use amethyst::audio::Source;
 use amethyst::core::{Time, Transform};
 use amethyst::derive::SystemDesc;
 use amethyst::ecs::{
@@ -7,6 +10,7 @@ use amethyst::prelude::Builder;
 use amethyst::shred::{ReadExpect, ResourceId};
 use amethyst::ui::UiText;
 
+use crate::audio::{play_sound, Sounds};
 use crate::pong::{Ball, BallSpawnTimeout, ScoreUi, Scores, ARENA_WIDTH};
 
 #[derive(SystemDesc)]
@@ -19,8 +23,11 @@ pub struct Data<'s> {
     ui_text: WriteStorage<'s, UiText>,
     entities: Entities<'s>,
     lazy_update: Read<'s, LazyUpdate>,
+    output: Option<Read<'s, Output>>,
     time: Read<'s, Time>,
+    audio_storage: Read<'s, AssetStorage<Source>>,
     score_ui: ReadExpect<'s, ScoreUi>,
+    sounds: ReadExpect<'s, Sounds>,
     scores: Write<'s, Scores>,
 }
 
@@ -42,6 +49,9 @@ impl<'s> System<'s> for WinnerSystem {
                 }
 
                 data.entities.delete(entity).unwrap();
+                if let Some(ref output) = data.output {
+                    play_sound(&data.sounds.score, &data.audio_storage, output);
+                };
 
                 data.lazy_update
                     .create_entity(&data.entities)

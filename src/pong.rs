@@ -9,6 +9,8 @@ use amethyst::{
     GameData, SimpleState, StateData,
 };
 
+use crate::audio::initialize_audio;
+
 pub const ARENA_HEIGHT: f32 = 100.0;
 pub const ARENA_WIDTH: f32 = 100.0;
 
@@ -27,6 +29,7 @@ impl SimpleState for Pong {
         initialize_scoreboard(data.world);
         initialize_paddles(data.world, sprite_sheet);
         initialize_ball_spawn_timeout(data.world);
+        initialize_audio(data.world);
     }
 }
 

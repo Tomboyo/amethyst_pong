@@ -1,8 +1,10 @@
 #![allow(clippy::option_map_unit_fn)]
+mod audio;
 mod pong;
 mod systems;
 
 use amethyst::{
+    audio::AudioBundle,
     core::TransformBundle,
     input::{InputBundle, StringBindings},
     renderer::{types::DefaultBackend, RenderFlat2D, RenderToWindow, RenderingBundle},
@@ -39,6 +41,7 @@ fn main() -> amethyst::Result<()> {
         // TODO: StirngBindings is discouraged
         .with_bundle(InputBundle::<StringBindings>::new().with_bindings_from_file(binding_path)?)?
         .with_bundle(UiBundle::<StringBindings>::new())?
+        .with_bundle(AudioBundle::default())?
         .with(PaddleSystem, "paddle_system", &["input_system"])
         .with(MoveBallsSystem, "move_balls_system", &[])
         .with(

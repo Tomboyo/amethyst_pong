@@ -1,21 +1,32 @@
+use amethyst::assets::AssetStorage;
+use amethyst::audio::output::Output;
+use amethyst::audio::Source;
 use amethyst::core::Transform;
 use amethyst::derive::SystemDesc;
-use amethyst::ecs::{Join, ReadStorage, System, SystemData, WriteStorage};
+use amethyst::ecs::{Join, ReadStorage, System, SystemData, World, WriteStorage};
+use amethyst::shred::{Read, ReadExpect, ResourceId};
 
+use crate::audio::{play_sound, Sounds};
 use crate::pong::{Ball, Paddle, Side, ARENA_HEIGHT};
 
 #[derive(SystemDesc)]
 pub struct BounceBallsSystem;
 
-impl<'s> System<'s> for BounceBallsSystem {
-    type SystemData = (
-        WriteStorage<'s, Ball>,
-        ReadStorage<'s, Paddle>,
-        ReadStorage<'s, Transform>,
-    );
+#[derive(SystemData)]
+pub struct Data<'s> {
+    balls: WriteStorage<'s, Ball>,
+    paddles: ReadStorage<'s, Paddle>,
+    transforms: ReadStorage<'s, Transform>,
+    storage: Read<'s, AssetStorage<Source>>,
+    sounds: ReadExpect<'s, Sounds>,
+    output: Option<Read<'s, Output>>,
+}
 
-    fn run(&mut self, (mut balls, paddles, locals): Self::SystemData) {
-        for (ball, local) in (&mut balls, &locals).join() {
+impl<'s> System<'s> for BounceBallsSystem {
+    type SystemData = Data<'s>;
+
+    fn run(&mut self, mut data: Self::SystemData) {
+        for (ball, local) in (&mut data.balls, &data.transforms).join() {
             let y = local.translation().y;
             let x = local.translation().x;
 
@@ -24,10 +35,13 @@ impl<'s> System<'s> for BounceBallsSystem {
                 || (y + ball.radius >= ARENA_HEIGHT && ball.velocity[1] > 0.0)
             {
                 ball.velocity[1] = -ball.velocity[1];
+                if let Some(ref output) = data.output {
+                    play_sound(&data.sounds.bounce, &data.storage, output);
+                };
             }
 
             // Bounce off of paddles
-            for (paddle, local) in (&paddles, &locals).join() {
+            for (paddle, local) in (&data.paddles, &data.transforms).join() {
                 let paddle_x = local.translation().x;
                 let paddle_y = local.translation().y;
 
@@ -36,6 +50,9 @@ impl<'s> System<'s> for BounceBallsSystem {
                         || (paddle.side == Side::Right && ball.velocity[0] > 0.0))
                 {
                     ball.velocity[0] = -ball.velocity[0];
+                    if let Some(ref output) = data.output {
+                        play_sound(&data.sounds.bounce, &data.storage, output);
+                    };
                 }
             }
         }
